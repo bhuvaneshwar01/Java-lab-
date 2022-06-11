@@ -1,0 +1,7 @@
+{
+    "java.project.sourcePaths": [
+        "lab11",
+        "lab10",
+        "learning/socket/single"
+    ]
+}

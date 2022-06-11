@@ -1,0 +1,129 @@
+abstract class Account {
+    int accno;
+    String accountname;
+    double balance;
+
+    Account(int accno, String accountname, double balance) {
+        this.accno = accno;
+        this.accountname = accountname;
+        this.balance = balance;
+    }
+
+    public abstract void deposit(double amt);
+
+    public abstract double withdraw(double amt);
+
+    @Override
+    public String toString() {
+        return accno + " " + accountname + " " + balance;
+    }
+}
+
+class SavingsAccount extends Account {
+    int no_of_transactions;
+
+    SavingsAccount(int accno, String accountname, double balance) {
+        super(accno, accountname, balance);
+        no_of_transactions = 0;
+    }
+
+    @Override
+    public void deposit(double amt) {
+        synchronized (this) {
+            this.balance += amt;
+            this.no_of_transactions++;
+        }
+    }
+
+    @Override
+    public double withdraw(double amt) {
+        synchronized (this) {
+            this.no_of_transactions++;
+            this.balance -= amt;
+        }
+        return amt;
+    }
+}
+
+class CheckingsAccount extends Account {
+
+    CheckingsAccount(int accno, String accountname, double balance) {
+        super(accno, accountname, balance);
+    }
+
+    @Override
+    public void deposit(double amt) {
+        this.balance += amt;
+    }
+
+    @Override
+    public double withdraw(double amt) {
+        double temp = this.balance - amt;
+        if (temp > 1000) {
+            this.balance -= amt;
+            return amt;
+        }
+        return 0;
+    }
+
+}
+
+class Mythreader extends Thread {
+    Account a;
+
+    Mythreader(Account a) {
+        this.a = a;
+    }
+
+    @Override
+    public void run() {
+        System.out.println("Depositing 2000 in : " + a.accountname);
+        a.deposit(2000);
+        System.out.println("Withdrawing 1000 in : " + a.accountname);
+        a.withdraw(1000);
+    }
+}
+
+public class spot {
+    public static void main(String[] args) {
+        int k = 1;
+        SavingsAccount s1 = new SavingsAccount(k++, "Bhuvaneshwar", 10000);
+        SavingsAccount s2 = new SavingsAccount(k++, "Deepak", 5220);
+
+        CheckingsAccount c1 = new CheckingsAccount(3, "Jones", 2000);
+
+        s1.deposit(5000);
+        s2.deposit(200);
+
+        System.out.println("Withdrawing : " + s1.withdraw(600) + " from " + s1.accountname);
+        System.out.println("Withdrawing : " + s2.withdraw(300) + " from " + s2.accountname);
+
+        double ss = c1.withdraw(250);
+        if (ss == 0) {
+            System.out.println("Low Balance in " + c1.accountname);
+        } else {
+            System.out.println("Withdrawing 2500 from " + c1.accountname);
+        }
+
+        try {
+            Mythreader t1 = new Mythreader(s1);
+            Mythreader t2 = new Mythreader(s1);
+            System.out.println(s1);
+            System.out.println(s2);
+            System.out.println(c1);
+
+            t1.run();
+            t2.run();
+
+            t1.join();
+            t2.join();
+
+            System.out.println("\nAfter Running the threads ");
+            System.out.println(s1);
+            System.out.println(s2);
+            System.out.println(c1);
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    }
+}
